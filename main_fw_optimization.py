@@ -40,9 +40,6 @@ node_odlink_relation = matrix['node_odlink_relation']
 node_oddemand = matrix['node_oddemand']
 od_odlink_relation = matrix['od_odlink_relation']
 
-target_gap = 1e-7
-iteration_number = 1000
-
 
 def cal_odlink_flow(current_odlink_flow):
     """
@@ -65,18 +62,19 @@ def cal_odlink_flow(current_odlink_flow):
 
 current_odlink_flow = cal_odlink_flow(np.zeros(link_number * od_number))
 
+target_gap = 1e-7
+iteration_number = 1000
 termination_bool = False
 optimum_bool = False
 iteration_index = 0
-
 while not (termination_bool or optimum_bool):
     optimal_vertex = cal_odlink_flow(current_odlink_flow)
 
     direction = optimal_vertex - current_odlink_flow
 
     current_odlink_flow, temp_value = algorithm_line_search(current_odlink_flow, direction,
-                                                               od_odlink_relation, link_free, para_a,
-                                                               para_b, link_capacity)
+                                                            od_odlink_relation, link_free, para_a,
+                                                            para_b, link_capacity)
 
     if iteration_index != 0:
         gap = np.abs((temp_value - optimal_value) / optimal_value)
@@ -88,7 +86,6 @@ while not (termination_bool or optimum_bool):
     optimal_value = temp_value
     iteration_index += 1
     print(f"iteration_index:{iteration_index}")
-
 
 print('*********************')
 print(f"optimum_bool:{optimum_bool}")

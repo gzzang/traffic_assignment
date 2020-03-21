@@ -3,6 +3,9 @@
 # @File    : main_default
 # @Project : cvxpy
 
+# 路段流量和OD相关路段流量
+
+import time
 import cvxpy as cp
 import numpy as np
 from preparation import read_data
@@ -30,6 +33,8 @@ node_odlink_relation = matrix['node_odlink_relation']
 node_oddemand = matrix['node_oddemand']
 od_odlink_relation = matrix['od_odlink_relation']
 
+start_time = time.time()
+
 x_odlink = cp.Variable(link_number * od_number)
 x_link = od_odlink_relation @ x_odlink
 objective = cp.Minimize(cp.sum(link_free * x_link) + cp.sum(
@@ -38,10 +43,12 @@ objective = cp.Minimize(cp.sum(link_free * x_link) + cp.sum(
 constraints = [x_odlink >= 0, node_odlink_relation @ x_odlink - node_oddemand == 0]
 result = cp.Problem(objective=objective, constraints=constraints).solve(reltol=1e-15, abstol=1e-15)
 
+print(f'runtime:{time.time() - start_time}')
+
 print(od_odlink_relation)
 print(x_odlink.value)
 
-aaa= od_odlink_relation @ x_odlink.value
+aaa = od_odlink_relation @ x_odlink.value
 
 print(f'optimal objective value: {objective.value}')
 print(f'optimal value: {od_odlink_relation @ x_odlink.value}')

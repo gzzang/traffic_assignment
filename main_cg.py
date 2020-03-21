@@ -9,10 +9,12 @@ import igraph as ig
 from preparation import read_data
 from preparation import set_parameter
 
+import time
 
 # np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
 
-iteration_number = 5
+print_bool = True
+iteration_print_bool = True
 
 data = read_data()
 link_node_pair = data['link_node_pair']
@@ -41,6 +43,7 @@ def cal_sp_of_one_od(link_flow, node_list):
     return node_incidence
 
 
+start_time = time.time()
 initial_od_list_route_link_incidence = []
 zero_link_flow = np.zeros_like(link_free)
 for one_pair_list in od_node_pair:
@@ -52,7 +55,12 @@ initial_route_link_incidence = np.vstack(initial_od_list_route_link_incidence)
 current_link_flow = od_demand @ initial_route_link_incidence
 current_od_list_route_link_incidence = initial_od_list_route_link_incidence
 
-for i in range(iteration_number):
+iteration_number = 20
+target_gap = 1e-10
+termination_bool = False
+optimum_bool = False
+iteration_index = 0
+while not (termination_bool or optimum_bool):
     for od_index, (one_route_link_incidence, one_pair_list) in enumerate(
             zip(current_od_list_route_link_incidence, od_node_pair)):
         sp_link_incidence = cal_sp_of_one_od(current_link_flow, one_pair_list)
@@ -76,12 +84,29 @@ for i in range(iteration_number):
     constraints = [x_route_flow >= 0, od_route_incidence @ x_route_flow == od_demand]
     result = cp.Problem(objective=objective, constraints=constraints).solve()
     current_link_flow = x_link_flow.value
+    temp_value = objective.value
 
-# print(route_link_incidence)
-# print(od_route_incidence)
-# print(x_route_flow.value)
-print(current_link_flow)
-print(od_route_number)
-print(objective.value)
+    if iteration_index != 0:
+        gap = np.abs((temp_value - optimal_value) / optimal_value)
+        if gap < target_gap:
+            optimum_bool = True
+        elif iteration_index == iteration_number:
+            termination_bool = True
 
+    optimal_value = temp_value
+    iteration_index += 1
+    if print_bool:
+        print(f"iteration_index:{iteration_index}")
+        if iteration_print_bool:
+            print(f"od_route_number:{od_route_number}")
+            print(f"current_link_flow:{current_link_flow}")
+            print(f"optimal_value:{optimal_value}")
 
+if print_bool:
+    print('-----------------------------------')
+    print(f"optimum_bool:{optimum_bool}")
+    print(f"iteration_index:{iteration_index}")
+    print(f"od_route_number:{od_route_number}")
+    print(f"current_link_flow:{current_link_flow}")
+    print(f"optimal_value:{optimal_value}")
+    print(f'runtime:{time.time() - start_time}')

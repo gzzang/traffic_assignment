@@ -17,13 +17,12 @@ def set_parameter():
 
 
 def read_from_pickle(network_name, folder_path):
-    with open(folder_path + network_name+ '.pkl', 'rb') as f:
+    with open(folder_path + network_name + '.pkl', 'rb') as f:
         data = pickle.load(f)
     return data
 
 
 def read_from_csv(network_name, folder_path):
-
     link_file_path = folder_path + network_name + '_link.csv'
     od_file_path = folder_path + network_name + '_od.csv'
 
@@ -46,22 +45,22 @@ def read_from_csv(network_name, folder_path):
     return data
 
 
-# def read_data(network_name = 'simple_network'):
-# def read_data(network_name='siouxfalls'):
+# def read_data(network_name='simple_network'):
+def read_data(network_name='siouxfalls'):
 # def read_data(network_name='nguyen_dupuis'):
-def read_data(network_name='nguyen_dupuis'):
+# def read_data(network_name='nguyen_dupuis'):
     """
     :return: ['link_node_pair', 'link_capacity', 'link_free_flow_time',
         'od_node_pair', 'od_demand', 'od_number', 'link_number', 'node_number']
     """
     folder_path = f'data/'
 
-    if os.path.exists(folder_path + network_name+ '.pkl'):
+    if os.path.exists(folder_path + network_name + '.pkl'):
         print('pickle')
         data = read_from_pickle(network_name, folder_path)
     else:
         data = read_from_csv(network_name, folder_path)
-        with open(folder_path + network_name+ '.pkl', 'wb') as f:
+        with open(folder_path + network_name + '.pkl', 'wb') as f:
             pickle.dump(data, f)
 
     od_node_pair = data['od_node_pair']
