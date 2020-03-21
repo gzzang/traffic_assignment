@@ -1,7 +1,15 @@
 # @Time    : 2020/3/3 14:06
 # @Author  : gzzang
 # @File    : main_fw_optimization
-# @Project : tap_link_form
+# @Project : traffic_assignment
+
+# 确定方向的两种方法：
+# 优化问题和求解最短路
+# 此外还可以分别对应路段流量和起讫点对相关路段流量
+# 此方法是优化问题方式
+# 对应的是起讫点对相关路段流量
+
+# 对应路段流量的方法没有写
 
 import cvxpy as cp
 import numpy as np
@@ -32,7 +40,8 @@ node_odlink_relation = matrix['node_odlink_relation']
 node_oddemand = matrix['node_oddemand']
 od_odlink_relation = matrix['od_odlink_relation']
 
-iteration_number = 500
+target_gap = 1e-7
+iteration_number = 1000
 
 
 def cal_odlink_flow(current_odlink_flow):
@@ -55,19 +64,36 @@ def cal_odlink_flow(current_odlink_flow):
 
 
 current_odlink_flow = cal_odlink_flow(np.zeros(link_number * od_number))
-print(f'x_initial:{current_odlink_flow}')
 
-for i in range(iteration_number):
+termination_bool = False
+optimum_bool = False
+iteration_index = 0
+
+while not (termination_bool or optimum_bool):
     optimal_vertex = cal_odlink_flow(current_odlink_flow)
 
     direction = optimal_vertex - current_odlink_flow
 
-    current_odlink_flow, optimal_value = algorithm_line_search(current_odlink_flow, direction,
+    current_odlink_flow, temp_value = algorithm_line_search(current_odlink_flow, direction,
                                                                od_odlink_relation, link_free, para_a,
                                                                para_b, link_capacity)
 
-    print(f"optimal_vertex:{optimal_vertex}")
-    print(f"direction:{direction}")
-    print(f'final:{current_odlink_flow}')
-    print(f'value:{optimal_value}')
-    print('*********************')
+    if iteration_index != 0:
+        gap = np.abs((temp_value - optimal_value) / optimal_value)
+        if gap < target_gap:
+            optimum_bool = True
+        elif iteration_index == iteration_number:
+            termination_bool = True
+
+    optimal_value = temp_value
+    iteration_index += 1
+    print(f"iteration_index:{iteration_index}")
+
+
+print('*********************')
+print(f"optimum_bool:{optimum_bool}")
+print(f"iteration_index:{iteration_index}")
+print(f"optimal_vertex:{optimal_vertex}")
+print(f"direction:{direction}")
+print(f'final:{current_odlink_flow}')
+print(f'value:{optimal_value}')
