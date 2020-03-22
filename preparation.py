@@ -23,8 +23,8 @@ def read_from_pickle(network_name, folder_path):
 
 
 def read_from_csv(network_name, folder_path):
-    link_file_path = folder_path + network_name + '_link.csv'
-    od_file_path = folder_path + network_name + '_od.csv'
+    link_file_path = folder_path + '/' + network_name + '/' + network_name + '_link.csv'
+    od_file_path = folder_path + '/' + network_name + '/' + network_name + '_od.csv'
 
     link_df = pd.read_csv(link_file_path)
     od_df = pd.read_csv(od_file_path)
@@ -45,23 +45,56 @@ def read_from_csv(network_name, folder_path):
     return data
 
 
-# def read_data(network_name='simple_network'):
-def read_data(network_name='siouxfalls'):
-# def read_data(network_name='nguyen_dupuis'):
-# def read_data(network_name='nguyen_dupuis'):
+def read_data_plus_route(network_name='simple_network', folder_path='network'):
+    data = read_data(network_name='simple_network', folder_path='network')
+
+    od_route_relation_file_path = folder_path + '/' + network_name + '/' + network_name + '_od_route_relation.csv'
+    route_link_relation_file_path = folder_path + '/' + network_name + '/' + network_name + '_route_link_relation.csv'
+
+    od_route_relation_df = pd.read_csv(od_route_relation_file_path)
+    route_link_relation_df = pd.read_csv(route_link_relation_file_path)
+
+    od_number = data['od_number']
+    link_number = data['link_number']
+
+    route_number = od_route_relation_df.shape[0]
+
+    od_route_incidence = np.zeros(shape=[od_number, route_number], dtype=bool)
+    first = od_route_relation_df['od_index'].to_numpy()
+    second = od_route_relation_df['route_index'].to_numpy()
+    od_route_incidence[first, second] = True
+
+    route_link_incidence = np.zeros(shape=[route_number, link_number], dtype=bool)
+    first = route_link_relation_df['route_index'].to_numpy()
+    second = route_link_relation_df['link_index'].to_numpy()
+    route_link_incidence[first, second] = True
+
+    data['od_route_incidence'] = od_route_incidence
+    data['route_link_incidence'] = route_link_incidence
+    data['route_number'] = route_number
+
+    return data
+
+
+def read_data(network_name='simple_network', folder_path='network'):
+    # def read_data(network_name='siouxfalls'):
+    # def read_data(network_name='nguyen_dupuis'):
+    # def read_data(network_name='nguyen_dupuis'):
     """
     :return: ['link_node_pair', 'link_capacity', 'link_free_flow_time',
         'od_node_pair', 'od_demand', 'od_number', 'link_number', 'node_number']
     """
-    folder_path = f'data/'
+    # folder_path = f'data/'
+    #
+    # if os.path.exists(folder_path + network_name + '.pkl'):
+    #     print('pickle')
+    #     data = read_from_pickle(network_name, folder_path)
+    # else:
+    #     data = read_from_csv(network_name, folder_path)
+    #     with open(folder_path + network_name + '.pkl', 'wb') as f:
+    #         pickle.dump(data, f)
 
-    if os.path.exists(folder_path + network_name + '.pkl'):
-        print('pickle')
-        data = read_from_pickle(network_name, folder_path)
-    else:
-        data = read_from_csv(network_name, folder_path)
-        with open(folder_path + network_name + '.pkl', 'wb') as f:
-            pickle.dump(data, f)
+    data = read_from_csv(network_name, folder_path)
 
     od_node_pair = data['od_node_pair']
     link_node_pair = data['link_node_pair']
@@ -107,10 +140,11 @@ def gen_matrix(data):
     return matrix
 
 
-def read_matrix_data():
-    od_node, od_demand, link_list, free_time_list, capacity_list, multiple_od_node_link_incidence, multiple_od_node_od_incidence, multiple_od_link_flow_matrix, parameter_alpha, parameter_beta, od_number, link_number, node_number = read_relation_and_matrix_data()
-    return free_time_list, capacity_list, multiple_od_node_link_incidence, multiple_od_node_od_incidence, multiple_od_link_flow_matrix, parameter_alpha, parameter_beta, od_number, link_number, node_number
+# def read_matrix_data():
+#     od_node, od_demand, link_list, free_time_list, capacity_list, multiple_od_node_link_incidence, multiple_od_node_od_incidence, multiple_od_link_flow_matrix, parameter_alpha, parameter_beta, od_number, link_number, node_number = read_relation_and_matrix_data()
+#     return free_time_list, capacity_list, multiple_od_node_link_incidence, multiple_od_node_od_incidence, multiple_od_link_flow_matrix, parameter_alpha, parameter_beta, od_number, link_number, node_number
 
 
 if __name__ == '__main__':
-    print(read_data('nguyen_dupuis'))
+    # print(read_data('nguyen_dupuis'))
+    read_data_plus_route('simple_network')

@@ -1,7 +1,7 @@
 # @Time    : 2020/3/2 22:01
 # @Author  : gzzang
-# @File    : main_cg
-# @Project : tap_link_form
+# @File    : alg_link_cg
+# @Project : traffic_assignment
 
 import numpy as np
 import cvxpy as cp
@@ -16,11 +16,7 @@ import os
 
 # np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
 
-def alg_cg(network_name):
-    bool_display = True
-    bool_display_iteration = True
-    bool_route_result_output = True
-
+def alg_link_cg(network_name, bool_display=True, bool_display_iteration=True, bool_route_result_output=False):
     data = read_data(network_name)
     link_node_pair = data['link_node_pair']
     link_capacity = data['link_capacity']
@@ -102,41 +98,39 @@ def alg_cg(network_name):
         optimal_value = temp_value
         iteration_index += 1
         if bool_display:
-            print(f"iteration_index:{iteration_index}")
             if bool_display_iteration:
+                print(f"iteration_index:{iteration_index}")
                 print(f'gap:{gap}')
                 print(f"od_route_number:{od_route_number}")
                 print(f"current_link_flow:{current_link_flow}")
                 print(f"optimal_value:{optimal_value}")
 
     if bool_display:
-        print('-----------------------------------')
+        print('----alg_link_cg----')
         print(f"optimum_bool:{optimum_bool}")
         print(f"iteration_index:{iteration_index}")
         print(f"od_route_number:{od_route_number}")
         print(f"current_link_flow:{current_link_flow}")
         print(f"optimal_value:{optimal_value}")
         print(f'runtime:{time.time() - start_time}')
+        print('--------')
 
     if bool_route_result_output:
-        print('-----------------------------------')
+        print('--------')
         print(f'bool_route_result_output:{bool_route_result_output}')
-        print('-----------------------------------')
+        print('--------')
 
         output_path = 'output'
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
         pd.DataFrame({string: value for string, value in
-                      zip(('route_index', 'link_index'), np.nonzero(route_link_incidence))}).to_csv(output_path + '/' +
-                                                                                                    network_name + '_route_link_relation.csv',
-                                                                                                    index=False)
-        pd.DataFrame(
-            {string: value for string, value in
-             zip(('od_index', 'route_index'), np.nonzero(od_route_incidence))}).to_csv(output_path + '/' +
-                                                                                       network_name + '_od_route_relation.csv',
-                                                                                       index=False)
+                      zip(('route_index', 'link_index'), np.nonzero(route_link_incidence))}).to_csv(
+            output_path + '/' + network_name + '_route_link_relation.csv', index=False)
+        pd.DataFrame({string: value for string, value in
+                      zip(('od_index', 'route_index'), np.nonzero(od_route_incidence))}).to_csv(
+            output_path + '/' + network_name + '_od_route_relation.csv', index=False)
 
 
 if __name__ == '__main__':
-    alg_cg('simple_network')
+    alg_link_cg('simple_network')
