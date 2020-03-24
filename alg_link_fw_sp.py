@@ -84,9 +84,10 @@ def alg_link_fw_sp(network_name, bool_display=True, bool_display_iteration=True)
         print(f"direction_link_flow:{direction_link_flow}")
         print(f'final:{current_link_flow}')
         print(f'value:{optimal_value}')
+        print(f'runtime:{time.time() - start_time}')
         print('--------')
 
-        print(f'runtime:{time.time() - start_time}')
+
 
 
 if __name__ == '__main__':

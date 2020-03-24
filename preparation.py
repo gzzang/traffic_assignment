@@ -45,8 +45,33 @@ def read_from_csv(network_name, folder_path):
     return data
 
 
-def read_data_plus_route(network_name='simple_network', folder_path='network'):
-    data = read_data(network_name='simple_network', folder_path='network')
+def read_from_csv_and_hov_lane(network_name, folder_path):
+    link_file_path = folder_path + '/' + network_name + '/' + network_name + '_link.csv'
+    od_file_path = folder_path + '/' + network_name + '/' + network_name + '_od.csv'
+
+    link_df = pd.read_csv(link_file_path)
+    od_df = pd.read_csv(od_file_path)
+
+    link_node_pair = link_df.iloc[:, :2].to_numpy()
+    link_free_flow_time = link_df.iloc[:, 2].to_numpy()
+    link_capacity = link_df.iloc[:, 3].to_numpy()
+    link_type = link_df.iloc[:, 4].to_numpy()
+
+    od_node_pair = od_df.iloc[:, :2].to_numpy()
+    od_demand = od_df.iloc[:, 2].to_numpy()
+
+    data = {'od_node_pair': od_node_pair,
+            'od_demand': od_demand,
+            'link_node_pair': link_node_pair,
+            'link_free_flow_time': link_free_flow_time,
+            'link_capacity': link_capacity,
+            'link_type':link_type}
+
+    return data
+
+
+def read_data_plus_route_hov(network_name, folder_path='network'):
+    data = read_data(network_name, folder_path='network')
 
     od_route_relation_file_path = folder_path + '/' + network_name + '/' + network_name + '_od_route_relation.csv'
     route_link_relation_file_path = folder_path + '/' + network_name + '/' + network_name + '_route_link_relation.csv'
@@ -62,6 +87,42 @@ def read_data_plus_route(network_name='simple_network', folder_path='network'):
     od_route_incidence = np.zeros(shape=[od_number, route_number], dtype=bool)
     first = od_route_relation_df['od_index'].to_numpy()
     second = od_route_relation_df['route_index'].to_numpy()
+    route_type = od_route_relation_df['route_type'].to_numpy()
+
+    od_route_incidence[first, second] = True
+
+    route_link_incidence = np.zeros(shape=[route_number, link_number], dtype=bool)
+    first = route_link_relation_df['route_index'].to_numpy()
+    second = route_link_relation_df['link_index'].to_numpy()
+    route_link_incidence[first, second] = True
+
+    data['od_route_incidence'] = od_route_incidence
+    data['route_link_incidence'] = route_link_incidence
+    data['route_number'] = route_number
+    data['route_type'] = route_type
+
+    return data
+
+
+
+def read_data_plus_route(network_name, folder_path='network'):
+    data = read_data(network_name, folder_path='network')
+
+    od_route_relation_file_path = folder_path + '/' + network_name + '/' + network_name + '_od_route_relation.csv'
+    route_link_relation_file_path = folder_path + '/' + network_name + '/' + network_name + '_route_link_relation.csv'
+
+    od_route_relation_df = pd.read_csv(od_route_relation_file_path)
+    route_link_relation_df = pd.read_csv(route_link_relation_file_path)
+
+    od_number = data['od_number']
+    link_number = data['link_number']
+
+    route_number = od_route_relation_df.shape[0]
+
+    od_route_incidence = np.zeros(shape=[od_number, route_number], dtype=bool)
+    first = od_route_relation_df['od_index'].to_numpy()
+    second = od_route_relation_df['route_index'].to_numpy()
+
     od_route_incidence[first, second] = True
 
     route_link_incidence = np.zeros(shape=[route_number, link_number], dtype=bool)
@@ -107,6 +168,23 @@ def read_data(network_name='simple_network', folder_path='network'):
     data['link_number'] = link_number
     data['node_number'] = node_number
     return data
+
+
+def read_data_and_hov_lane(network_name, folder_path='network'):
+    data = read_from_csv_and_hov_lane(network_name, folder_path)
+
+    od_node_pair = data['od_node_pair']
+    link_node_pair = data['link_node_pair']
+
+    od_number = od_node_pair.shape[0]
+    link_number = link_node_pair.shape[0]
+    node_number = np.max(link_node_pair) + 1
+
+    data['od_number'] = od_number
+    data['link_number'] = link_number
+    data['node_number'] = node_number
+    return data
+
 
 
 def gen_matrix(data):

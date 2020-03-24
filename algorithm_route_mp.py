@@ -12,22 +12,20 @@ import time
 
 # np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
 
-def alg_route_default(network_name, bool_display=True):
+def algorithm_route_mp(data_with_route_variable, bool_display=True):
     start_time = time.time()
+    link_node_pair = data_with_route_variable['link_node_pair']
+    link_capacity = data_with_route_variable['link_capacity']
+    link_free = data_with_route_variable['link_free_flow_time']
+    od_node_pair = data_with_route_variable['od_node_pair']
+    od_demand = data_with_route_variable['od_demand']
+    od_number = data_with_route_variable['od_number']
+    link_number = data_with_route_variable['link_number']
+    node_number = data_with_route_variable['node_number']
 
-    data = read_data_plus_route(network_name)
-    link_node_pair = data['link_node_pair']
-    link_capacity = data['link_capacity']
-    link_free = data['link_free_flow_time']
-    od_node_pair = data['od_node_pair']
-    od_demand = data['od_demand']
-    od_number = data['od_number']
-    link_number = data['link_number']
-    node_number = data['node_number']
-
-    od_route_incidence = data['od_route_incidence']
-    route_link_incidence = data['route_link_incidence']
-    route_number = data['route_number']
+    od_route_incidence = data_with_route_variable['od_route_incidence']
+    route_link_incidence = data_with_route_variable['route_link_incidence']
+    route_number = data_with_route_variable['route_number']
 
     parameter = set_parameter()
     para_a = parameter['a']
@@ -40,15 +38,19 @@ def alg_route_default(network_name, bool_display=True):
     constraints = [x_route_flow >= 0, od_route_incidence @ x_route_flow == od_demand]
     result = cp.Problem(objective=objective, constraints=constraints).solve()
     current_link_flow = x_link_flow.value
+    current_route_flow = x_route_flow.value
     optimal_value = objective.value
 
     if bool_display:
         print('----alg_route_default----')
         print(f"current_link_flow:{current_link_flow}")
+        print(f"current_route_flow:{current_route_flow}")
         print(f"optimal_value:{optimal_value}")
         print(f'runtime:{time.time() - start_time}')
         print('----')
 
+    return current_route_flow, optimal_value
 
 if __name__ == '__main__':
-    alg_route_default('simple_network')
+    data_with_route_variable = read_data_plus_route('simple_network')
+    algorithm_route_mp(data_with_route_variable,bool_display=False)

@@ -1,6 +1,6 @@
 # @Time    : 2020/3/22 13:27
 # @Author  : gzzang
-# @File    : alg_msa_based_on_route
+# @File    : algorithm_route_msa
 # @Project : traffic_assignment
 
 import numpy as np
@@ -9,9 +9,7 @@ from preparation import set_parameter
 import time
 
 
-# np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
-
-def alg_route_msa(network_name, bool_display=True, bool_display_iteration=True):
+def algorithm_route_msa(data_with_route_variable, bool_display=True, bool_display_iteration=True):
     start_time = time.time()
 
     def cal_objective_value_from_route_flow(route_flow):
@@ -20,19 +18,19 @@ def alg_route_msa(network_name, bool_display=True, bool_display_iteration=True):
                 (link_flow / link_capacity) ** (para_b + 1))).sum()
         return objective_value
 
-    data = read_data_plus_route(network_name)
-    link_node_pair = data['link_node_pair']
-    link_capacity = data['link_capacity']
-    link_free = data['link_free_flow_time']
-    od_node_pair = data['od_node_pair']
-    od_demand = data['od_demand']
-    od_number = data['od_number']
-    link_number = data['link_number']
-    node_number = data['node_number']
 
-    od_route_incidence = data['od_route_incidence']
-    route_link_incidence = data['route_link_incidence']
-    route_number = data['route_number']
+    link_node_pair = data_with_route_variable['link_node_pair']
+    link_capacity = data_with_route_variable['link_capacity']
+    link_free = data_with_route_variable['link_free_flow_time']
+    od_node_pair = data_with_route_variable['od_node_pair']
+    od_demand = data_with_route_variable['od_demand']
+    od_number = data_with_route_variable['od_number']
+    link_number = data_with_route_variable['link_number']
+    node_number = data_with_route_variable['node_number']
+
+    od_route_incidence = data_with_route_variable['od_route_incidence']
+    route_link_incidence = data_with_route_variable['route_link_incidence']
+    route_number = data_with_route_variable['route_number']
 
     parameter = set_parameter()
     para_a = parameter['a']
@@ -48,7 +46,6 @@ def alg_route_msa(network_name, bool_display=True, bool_display_iteration=True):
     optimum_bool = False
     iteration_index = 0
     while not (termination_bool or optimum_bool):
-
         link_flow = current_route_flow @ route_link_incidence
         link_time = link_free * (1 + para_a * (link_flow ** 4) / (link_capacity ** 4))
         route_time = route_link_incidence @ link_time
@@ -78,12 +75,12 @@ def alg_route_msa(network_name, bool_display=True, bool_display_iteration=True):
         optimal_value = temp_value
         iteration_index += 1
         if bool_display_iteration:
-            print('-----------------------------------')
+            print('--------')
             print(f"iteration_index:{iteration_index}")
             print(f"gap:{gap}")
             print(f"current_link_flow:{current_route_flow}")
             print(f"optimal_value:{optimal_value}")
-            print('-----------------------------------')
+            print('--------')
 
     if bool_display:
         print('----alg_route_msa----')
@@ -96,6 +93,9 @@ def alg_route_msa(network_name, bool_display=True, bool_display_iteration=True):
         print(f'runtime:{time.time() - start_time}')
         print('--------')
 
+    return current_route_flow, optimal_value
+
 
 if __name__ == '__main__':
-    alg_route_msa('simple_network')
+    data_with_route_variable = read_data_plus_route('nguyen_dupuis')
+    algorithm_route_msa(data_with_route_variable, bool_display=True, bool_display_iteration=False)

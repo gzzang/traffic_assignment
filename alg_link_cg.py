@@ -3,18 +3,20 @@
 # @File    : alg_link_cg
 # @Project : traffic_assignment
 
+# 成功调用路径求解函数
+
 import numpy as np
-import cvxpy as cp
 import igraph as ig
 from preparation import read_data
 from preparation import set_parameter
+from algorithm_route_vi import algorithm_route_vi
+from algorithm_route_mp import algorithm_route_mp
+from algorithm_route_msa import algorithm_route_msa
 
 import time
 import pandas as pd
 import os
 
-
-# np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
 
 def alg_link_cg(network_name, bool_display=True, bool_display_iteration=True, bool_route_result_output=False):
     data = read_data(network_name)
@@ -55,7 +57,7 @@ def alg_link_cg(network_name, bool_display=True, bool_display_iteration=True, bo
     current_od_list_route_link_incidence = initial_od_list_route_link_incidence
 
     iteration_number = 20
-    target_gap = 1e-10
+    target_gap = 1e-20
     termination_bool = False
     optimum_bool = False
     iteration_index = 0
@@ -77,14 +79,16 @@ def alg_link_cg(network_name, bool_display=True, bool_display_iteration=True, bo
             od_route_incidence[od_index, temp:(temp + value)] = True
             temp += value
 
-        x_route_flow = cp.Variable(route_number)
-        x_link_flow = x_route_flow @ route_link_incidence
-        objective = cp.Minimize(cp.sum(link_free * x_link_flow) + cp.sum(
-            link_free * para_a / (para_b + 1) * link_capacity * cp.power(x_link_flow / link_capacity, para_b + 1)))
-        constraints = [x_route_flow >= 0, od_route_incidence @ x_route_flow == od_demand]
-        result = cp.Problem(objective=objective, constraints=constraints).solve()
-        current_link_flow = x_link_flow.value
-        temp_value = objective.value
+        data_with_route_variable = data
+        data_with_route_variable['od_route_incidence'] = od_route_incidence
+        data_with_route_variable['route_link_incidence'] = route_link_incidence
+        data_with_route_variable['route_number'] = route_link_incidence.shape[0]
+        # current_route_flow, temp_value = algorithm_route_vi(data_with_route_variable, bool_display=False,
+        #                                                        bool_display_iteration=False)
+        # current_route_flow, temp_value = algorithm_route_mp(data_with_route_variable, bool_display=False)
+        current_route_flow, temp_value = algorithm_route_msa(data_with_route_variable, bool_display=False)
+
+        current_link_flow = current_route_flow @ route_link_incidence
 
         if iteration_index != 0:
             gap = np.abs((temp_value - optimal_value) / optimal_value)
@@ -99,15 +103,18 @@ def alg_link_cg(network_name, bool_display=True, bool_display_iteration=True, bo
         iteration_index += 1
         if bool_display:
             if bool_display_iteration:
+                print('----iteration_alg_link_cg_default----')
                 print(f"iteration_index:{iteration_index}")
                 print(f'gap:{gap}')
                 print(f"od_route_number:{od_route_number}")
                 print(f"current_link_flow:{current_link_flow}")
                 print(f"optimal_value:{optimal_value}")
+                print('--------')
 
     if bool_display:
-        print('----alg_link_cg----')
-        print(f"optimum_bool:{optimum_bool}")
+        print('----alg_link_cg_default----')
+        print(f'optimum_bool:{optimum_bool}')
+        print(f'gap:{gap}')
         print(f"iteration_index:{iteration_index}")
         print(f"od_route_number:{od_route_number}")
         print(f"current_link_flow:{current_link_flow}")
@@ -133,4 +140,5 @@ def alg_link_cg(network_name, bool_display=True, bool_display_iteration=True, bo
 
 
 if __name__ == '__main__':
-    alg_link_cg('simple_network')
+    np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
+    alg_link_cg('nguyen_dupuis')
